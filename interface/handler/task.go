@@ -5,83 +5,125 @@ import (
 	"strconv"
 
 	"sample/usecase"
-	"sample/domain/model"
+
 	"github.com/labstack/echo"
 )
 
-type TaskHandler struct {
+// TaskHandler task handlerのinterface
+type TaskHandler interface {
+	Post() echo.HandlerFunc
+	Get() echo.HandlerFunc
+	Put() echo.HandlerFunc
+	Delete() echo.HandlerFunc
+}
+
+type taskHandler struct {
 	taskUsecase usecase.TaskUsecase
 }
 
+// NewTaskHandler task handlerのコンストラクタ
 func NewTaskHandler(taskUsecase usecase.TaskUsecase) TaskHandler {
-	return TaskHandler{taskUsecase: taskUsecase}
+	return &taskHandler{taskUsecase: taskUsecase}
 }
 
-func (th *TaskHandler) Post() echo.HandlerFunc {
+type requestTask struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+type responseTask struct {
+	ID      int    `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+// Post taskを保存するときのハンドラー
+func (th *taskHandler) Post() echo.HandlerFunc {
 	return func(c echo.Context) error {
-        var task model.Task
-        if err := c.Bind(&task); err != nil {
-			return c.JSON(http.StatusBadRequest, task)
+		var req requestTask
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-		createdTask, err := th.taskUsecase.Create(&task)
+		createdTask, err := th.taskUsecase.Create(req.Title, req.Content)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, createdTask)
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-        return c.JSON(http.StatusCreated, createdTask)
-    }
+		res := responseTask{
+			ID:      createdTask.ID,
+			Title:   createdTask.Title,
+			Content: createdTask.Content,
+		}
+
+		return c.JSON(http.StatusCreated, res)
+	}
 }
 
-func (th *TaskHandler) Get() echo.HandlerFunc {
+// Get taskを取得するときのハンドラー
+func (th *taskHandler) Get() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := strconv.Atoi((c.Param("id")))
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
 		foundTask, err := th.taskUsecase.FindByID(id)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, foundTask)
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-        return c.JSON(http.StatusOK, foundTask)
-    }
+		res := responseTask{
+			ID:      foundTask.ID,
+			Title:   foundTask.Title,
+			Content: foundTask.Content,
+		}
+
+		return c.JSON(http.StatusOK, res)
+	}
 }
 
-func (th *TaskHandler) Put() echo.HandlerFunc {
+// Put taskを更新するときのハンドラー
+func (th *taskHandler) Put() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.Atoi((c.Param("id")))
+		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-		var task model.Task
-        if err := c.Bind(&task); err != nil {
-			return c.JSON(http.StatusBadRequest, task)
+		var req requestTask
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-		updatedTask, err := th.taskUsecase.Update(id, &task)
+		updatedTask, err := th.taskUsecase.Update(id, req.Title, req.Content)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, updatedTask)
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-        return c.JSON(http.StatusOK, updatedTask)
-    }
+		res := responseTask{
+			ID:      updatedTask.ID,
+			Title:   updatedTask.Title,
+			Content: updatedTask.Content,
+		}
+
+		return c.JSON(http.StatusOK, res)
+	}
 }
 
-func (th *TaskHandler) Delete() echo.HandlerFunc {
+// Delete taskを削除するときのハンドラー
+func (th *taskHandler) Delete() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.Atoi((c.Param("id")))
+		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
 		err = th.taskUsecase.Delete(id)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-        return c.NoContent(http.StatusNoContent)
-    }
+		return c.NoContent(http.StatusNoContent)
+	}
 }

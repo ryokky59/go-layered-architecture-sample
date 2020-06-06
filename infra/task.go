@@ -7,15 +7,17 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type TaskRepository struct {
+type taskRepository struct {
 	Conn *gorm.DB
 }
 
+// NewTaskRepository task repositoryのコンストラクタ
 func NewTaskRepository(conn *gorm.DB) repository.TaskRepository {
-	return &TaskRepository{Conn: conn}
+	return &taskRepository{Conn: conn}
 }
 
-func (tr *TaskRepository) Create(task *model.Task) (*model.Task, error) {
+// Create taskの保存
+func (tr *taskRepository) Create(task *model.Task) (*model.Task, error) {
 	if err := tr.Conn.Create(&task).Error; err != nil {
 		return nil, err
 	}
@@ -23,7 +25,8 @@ func (tr *TaskRepository) Create(task *model.Task) (*model.Task, error) {
 	return task, nil
 }
 
-func (tr *TaskRepository) FindByID(id int) (*model.Task, error) {
+// FindByID taskをIDで取得
+func (tr *taskRepository) FindByID(id int) (*model.Task, error) {
 	task := &model.Task{ID: id}
 
 	if err := tr.Conn.First(&task).Error; err != nil {
@@ -33,7 +36,8 @@ func (tr *TaskRepository) FindByID(id int) (*model.Task, error) {
 	return task, nil
 }
 
-func (tr *TaskRepository) Update(task *model.Task) (*model.Task, error) {
+// Update taskの更新
+func (tr *taskRepository) Update(task *model.Task) (*model.Task, error) {
 	if err := tr.Conn.Model(&task).Update(&task).Error; err != nil {
 		return nil, err
 	}
@@ -41,7 +45,8 @@ func (tr *TaskRepository) Update(task *model.Task) (*model.Task, error) {
 	return task, nil
 }
 
-func (tr *TaskRepository) Delete(task *model.Task) error {
+// Delete taskの削除
+func (tr *taskRepository) Delete(task *model.Task) error {
 	if err := tr.Conn.Delete(&task).Error; err != nil {
 		return err
 	}

@@ -1,14 +1,16 @@
 FROM golang:1.13.11-alpine3.11 AS build
 
+ENV GO111MODULE=on
+
 WORKDIR /
-COPY . /go/src/github.com/ryokky59/sample_ddd_go
-RUN apk update \
-  && apk add --no-cache git \
-  && go get github.com/go-sql-driver/mysql \
-  && go get github.com/google/uuid \
-  && go get github.com/gorilla/mux
-RUN cd /go/src/github.com/ryokky59/sample_ddd_go/api && go build -o bin/sample main.go
+
+COPY . /go/src/github.com/ryokky59/go-layered-architecture-sample
+
+RUN apk update && apk add --no-cache git
+RUN cd /go/src/github.com/ryokky59/go-layered-architecture-sample/api && go build -o bin/sample main.go
 
 FROM alpine:3.8
-COPY --from=build /go/src/github.com/ryokky59/sample_ddd_go/api/bin/sample /usr/local/bin/
+
+COPY --from=build /go/src/github.com/ryokky59/go-layered-architecture-sample/api/bin/sample /usr/local/bin/
+
 CMD ["sample"]

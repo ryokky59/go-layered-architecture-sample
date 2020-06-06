@@ -6,8 +6,9 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// NewDB DBと接続する
 func NewDB() *gorm.DB {
-	db, err := gorm.Open("mysql", "root:password@tcp(sample_db)/sample?parseTime=true")
+	db, err := gorm.Open("mysql", "user:password@tcp(sample_db)/sample?charset=utf8mb4&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
 	}
